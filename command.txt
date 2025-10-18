@@ -1,0 +1,1 @@
+uvicorn apps.ai_service.inference_server:app --reload --port 8001
