@@ -255,38 +255,45 @@ def requestor_dashboard(request):
 
 
 
-#Unit Heads Views
 @login_required
 def unit_head_account_management(request):
     user = request.user
-    password_form = PasswordChangeForm(user, request.POST or None)
 
-    if request.method == 'POST' and 'update_profile' in request.POST:
-        # Profile update
-        full_name = request.POST.get('full_name')
-        email = request.POST.get('email')
+    # Initialize a blank password form (will re-bind only when password form is submitted)
+    password_form = PasswordChangeForm(user)
 
-        # Split name safely
-        if full_name:
-            name_parts = full_name.split(' ', 1)
-            user.first_name = name_parts[0]
-            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
-        user.email = email
-        user.save()
-        messages.success(request, "Profile updated successfully!")
+    if request.method == 'POST':
+        # Profile Update Form
+        if 'update_profile' in request.POST:
+            full_name = request.POST.get('full_name')
+            email = request.POST.get('email')
 
-    elif request.method == 'POST' and 'change_password' in request.POST:
-        # Password change
-        if password_form.is_valid():
-            user = password_form.save()
-            update_session_auth_hash(request, user)
-            messages.success(request, "Password changed successfully!")
-            return redirect('gso_accounts:unit_head_account_management')
+            # Safely split name into first and last
+            if full_name:
+                name_parts = full_name.split(' ', 1)
+                user.first_name = name_parts[0]
+                user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+            user.email = email
+            user.save()
+
+            messages.success(request, "Profile updated successfully!")
+
+        # Password Change Form
+        elif 'change_password' in request.POST:
+            password_form = PasswordChangeForm(user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)  # keeps user logged in
+                messages.success(request, "Password changed successfully!")
+                return redirect('gso_accounts:unit_head_account_management')
+            else:
+                messages.error(request, "Please correct the errors below.")
 
     return render(request, 'unit_heads/unit_head_account_management/unit_head_account_management.html', {
         'user': user,
         'form': password_form
     })
+
 
 
 
