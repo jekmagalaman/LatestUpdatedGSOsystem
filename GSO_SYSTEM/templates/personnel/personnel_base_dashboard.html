@@ -39,21 +39,21 @@
             </div>
         </a>
 
-        <a href="{{ personnel_inventory_url }}" class="nav-link">
-            <div class="nav-item {% if request.path == personnel_inventory_url %}active{% endif %}">
-                <div class="nav-icon">
-                    <img src="{% static 'images/unit_head/inventory_icon.png' %}" alt="Inventory">
-                </div>
-                <span>Inventory</span>
-            </div>
-        </a>
-
         <a href="{{ personnel_history_url }}" class="nav-link">
             <div class="nav-item {% if request.path == personnel_history_url %}active{% endif %}">
                 <div class="nav-icon">
                     <img src="{% static 'images/unit_head/request_history.png' %}" alt="Task History">
                 </div>
                 <span>Task History</span>
+            </div>
+        </a>
+
+        <a href="{{ personnel_inventory_url }}" class="nav-link">
+            <div class="nav-item {% if request.path == personnel_inventory_url %}active{% endif %}">
+                <div class="nav-icon">
+                    <img src="{% static 'images/unit_head/inventory_icon.png' %}" alt="Inventory">
+                </div>
+                <span>Inventory</span>
             </div>
         </a>
 

@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="{% static 'css/gso_dashboard.css' %}" />
 </head>
 <body>
+  
+  
   <div class="sidebar" id="sidebar">
     <!-- Logo & Hamburger -->
     <div class="logo-section">
@@ -17,11 +19,13 @@
         <img src="{% static 'images/gso_logo.png' %}" alt="General Services Office Logo">
       </div>
       <span style="font-weight: 600;">GSO</span>
+
       <div class="hamburger" id="sidebarToggle">
         <div class="bar"></div>
         <div class="bar"></div>
         <div class="bar"></div>
       </div>
+      
     </div>
 
     {% comment %} Namespaced URLs with role awareness {% endcomment %}
@@ -31,12 +35,17 @@
         {% url 'gso_requests:request_management' as request_management_url %}
     {% endif %}
 
+    
+    {% url 'gso_reports:gso_analytics' as gso_analytics_url %}
+
     {% url 'gso_reports:accomplishment_report' as accomplishment_report_url %}
     {% url 'gso_inventory:gso_inventory' as gso_inventory_url %}
     {% url 'gso_accounts:account_management' as account_management_url %}
+    
 
     <!-- Navigation Menu -->
     <div class="nav-menu">
+
       <a href="{{ request_management_url }}" class="nav-link">
         <div class="nav-item {% if request.path == request_management_url %}active{% endif %}">
           <div class="nav-icon">
@@ -52,6 +61,15 @@
             <img src="{% static 'images/gso_office/report_icon.png' %}" alt="Accomplishment Report">
           </div>
           <span>Accomplishment Report</span>
+        </div>
+      </a>
+
+      <a href="{{ gso_analytics_url }}" class="nav-link">
+        <div class="nav-item {% if request.path == gso_analytics_url %}active{% endif %}">
+          <div class="nav-icon">
+            <img src="{% static 'images/analytics.png' %}" alt="GSO Analytics">
+          </div>
+          <span>Analytics</span>
         </div>
       </a>
 
@@ -103,31 +121,50 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const sidebar = document.getElementById("sidebar");
-      const hamburger = document.getElementById("sidebarToggle");
+    const sidebar = document.getElementById("sidebar");
+    const hamburger = document.getElementById("sidebarToggle");
+    const body = document.body;
 
-      hamburger.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          sidebar.classList.toggle("show");
-        } else {
-          sidebar.classList.toggle("collapsed");
-        }
-      });
-
-      function handleResize() {
-        if (window.innerWidth <= 768) {
-          sidebar.classList.remove("collapsed", "show");
-        } else if (window.innerWidth <= 1024) {
-          sidebar.classList.add("collapsed");
-          sidebar.classList.remove("show");
-        } else {
-          sidebar.classList.remove("collapsed", "show");
-        }
+    hamburger.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.toggle("show");
+        body.classList.toggle("sidebar-open");
+      } else {
+        sidebar.classList.toggle("collapsed");
       }
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
     });
+
+    // Close sidebar if click outside on mobile
+    body.addEventListener("click", (e) => {
+      if (
+        window.innerWidth <= 768 &&
+        sidebar.classList.contains("show") &&
+        !sidebar.contains(e.target) &&
+        !hamburger.contains(e.target)
+      ) {
+        sidebar.classList.remove("show");
+        body.classList.remove("sidebar-open");
+      }
+    });
+
+    function handleResize() {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove("collapsed", "show");
+        body.classList.remove("sidebar-open");
+      } else if (window.innerWidth <= 1024) {
+        sidebar.classList.add("collapsed");
+        sidebar.classList.remove("show");
+        body.classList.remove("sidebar-open");
+      } else {
+        sidebar.classList.remove("collapsed", "show");
+        body.classList.remove("sidebar-open");
+      }
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+  });
+
   </script>
 </body>
 </html>

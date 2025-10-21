@@ -147,7 +147,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "gso_accounts.User"
 
-LOGIN_REDIRECT_URL = '/gso_accounts/redirect/'  # ✅ KEEP ONLY THIS
+LOGIN_REDIRECT_URL = '/gso_accounts/redirect/'
 LOGIN_URL = '/gso_accounts/login/'
 LOGOUT_REDIRECT_URL = '/gso_accounts/login/'
 

@@ -491,3 +491,24 @@ def get_user_by_identifier(identifier):
             Q(last_name__icontains=identifier)
         ).first()
     )
+
+
+
+
+
+
+
+
+
+
+
+
+#GSO Analytics View
+@login_required
+def gso_analytics(request):
+    context = {
+        'total_requests': 120,
+        'completed_requests': 95,
+        'pending_requests': 25,
+    }
+    return render(request, 'gso_office/analytics/gso_analytics.html', context)

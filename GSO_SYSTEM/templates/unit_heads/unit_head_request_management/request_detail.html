@@ -1,143 +1,213 @@
 {% extends "unit_heads/unit_head_base_dashboard.html" %}
+{% load custom_tags %}
 
 {% block title %}Request #{{ req.id }}{% endblock %}
 
-{% load custom_tags %}
-
 {% block main_content %}
+<!-- ===== HEADER ===== -->
 <div class="header d-flex align-items-center justify-content-between mb-4">
   <h1 class="page-title">REQUEST DETAILS</h1>
   <a href="{% url 'gso_requests:unit_head_request_management' %}" class="btn btn-secondary btn-sm">← Back</a>
 </div>
 
-<!-- Request Info -->
-<div class="card p-4 shadow-sm mb-4">
-  <h4><b>REQUEST INFORMATION</b></h4>
-  <div class="row g-3">
-    <div class="col-md-6">
-      <p><strong>ID:</strong> {{ req.id }}</p>
-      <p><strong>Requestor:</strong> {{ req.custom_full_name }}</p>
-      <p><strong>Department:</strong> {{ req.requestor.department }}</p>
-    </div>
-    <div class="col-md-6">
-      <p><strong>Date Submitted:</strong> {{ req.created_at|date:"Y-m-d H:i" }}</p>
-      <p><strong>Status:</strong> {{ req.status }}</p>
-      <p>
-        <strong>Assigned Personnel:</strong>
-        {% if req.assigned_personnel.all %}
-          {% for p in req.assigned_personnel.all %}
-            {{ p.get_full_name|default:p.username }}{% if not forloop.last %}, {% endif %}
-          {% endfor %}
-        {% else %}
-          Unassigned
-        {% endif %}
-      </p>
-      <p>
-        <strong>Assigned Materials:</strong>
+<!-- ===== REQUEST INFO ===== -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header text-white fw-bold" style="background-color: #002e72;">
+    <i class="bi bi-info-circle me-2"></i> Request Information
+  </div>
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <p><strong>ID:</strong> #{{ req.id }}</p>
+        <p><strong>Requestor:</strong> {{ req.custom_full_name }}</p>
+        <p><strong>Department:</strong> {{ req.requestor.department }}</p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>Date Submitted:</strong> {{ req.created_at|date:"Y-m-d H:i" }}</p>
+        <p>
+          <strong>Status:</strong>
+          <span class="badge 
+            {% if req.status == 'Completed' %}bg-success
+            {% elif req.status == 'Pending' %}bg-warning text-dark
+            {% elif req.status == 'In Progress' %}bg-info text-dark
+            {% elif req.status == 'Cancelled' %}bg-danger
+            {% else %}bg-secondary{% endif %}">
+            {{ req.status }}
+          </span>
+        </p>
+
+        <p><strong>Assigned Personnel:</strong><br>
+          {% if req.assigned_personnel.all %}
+            {% for p in req.assigned_personnel.all %}
+              <span class="badge bg-light text-dark border">
+                <i class="bi bi-person"></i> {{ p.get_full_name|default:p.username }}
+              </span>
+            {% endfor %}
+          {% else %}
+            <span class="text-muted">Unassigned</span>
+          {% endif %}
+        </p>
+
+        <p><strong>Assigned Materials:</strong></p>
         {% if req.requestmaterial_set.all %}
-          <ul>
+          <ul class="list-unstyled ps-3">
             {% for rm in req.requestmaterial_set.all %}
-              <li>{{ rm.material.name }} - {{ rm.quantity }} {{ rm.material.unit }}</li>
+              <li><i class="bi bi-box-seam text-primary"></i> {{ rm.material.name }} – {{ rm.quantity }} {{ rm.material.unit }}</li>
             {% endfor %}
           </ul>
         {% else %}
-          No materials assigned
+          <p class="text-muted">No materials assigned</p>
         {% endif %}
-      </p>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Progress Reports -->
-<div class="card p-4 shadow-sm mb-4">
-  <h4><b>PROGRESS REPORTS</b></h4>
-  {% if reports %}
-    <ul>
-      {% for r in reports %}
-        <li>
-          {{ r.personnel.get_full_name|default:r.personnel.username }}:
-          {{ r.report_text }} ({{ r.created_at|date:"Y-m-d H:i" }})
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-muted">No reports yet.</p>
-  {% endif %}
+<!-- ===== PROGRESS REPORTS ===== -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header text-white fw-bold" style="background-color: #002e72;">
+    <i class="bi bi-clipboard-check me-2"></i> Progress Reports
+  </div>
+  <div class="card-body">
+    {% if reports %}
+      <div class="list-group">
+        {% for r in reports %}
+          <div class="list-group-item d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ r.personnel.get_full_name|default:r.personnel.username }}</strong><br>
+              {{ r.report_text }}
+            </div>
+            <small class="text-muted">{{ r.created_at|date:"Y-m-d H:i" }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">No reports yet.</p>
+    {% endif %}
+  </div>
 </div>
 
-{% if req.status != "Completed" and req.status != "Cancelled" and req.status != "Done for Review" %}
+{% if req.status not in "Completed,Cancelled,Done for Review" %}
 <form method="post">
   {% csrf_token %}
 
-  <!-- Personnel Assignment -->
-  <div class="card p-4 shadow-sm mb-4">
-    <h4>Assign Personnel</h4>
-    {% for p in personnel %}
-      <div class="form-check">
-        <input type="checkbox" name="personnel_ids" value="{{ p.id }}" id="personnel_{{ p.id }}" class="form-check-input"
-        {% if p in req.assigned_personnel.all %}checked{% endif %}>
-        <label for="personnel_{{ p.id }}">{{ p.get_full_name|default:p.username }}</label>
-      </div>
-    {% empty %}
-      <p>No personnel available.</p>
-    {% endfor %}
+  <!-- ===== PERSONNEL ASSIGNMENT ===== -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header text-white fw-bold" style="background-color: #002e72;">
+      <i class="bi bi-people me-2"></i> Assign Personnel
+    </div>
+    <div class="card-body">
+      {% for p in personnel %}
+        <div class="form-check mb-2">
+          <input 
+            type="checkbox" 
+            name="personnel_ids" 
+            value="{{ p.id }}" 
+            id="personnel_{{ p.id }}" 
+            class="form-check-input"
+            {% if p in req.assigned_personnel.all %}checked{% endif %}>
+          <label for="personnel_{{ p.id }}" class="form-check-label">
+            {{ p.get_full_name|default:p.username }}
+          </label>
+        </div>
+      {% empty %}
+        <p class="text-muted">No personnel available.</p>
+      {% endfor %}
+    </div>
   </div>
 
-  <!-- Materials Assignment -->
-  <div class="card p-4 shadow-sm mb-4">
-    <h4>Select Materials</h4>
-    {% for m in materials %}
-      {% with assigned_qty=assigned_materials|get_item:m.id %}
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <input 
-          type="checkbox" 
-          name="material_ids" 
-          value="{{ m.id }}" 
-          id="material_{{ m.id }}" 
-          class="form-check-input material-checkbox"
-          {% if assigned_qty %}checked{% endif %}>
-          
-        <label for="material_{{ m.id }}" class="me-2">
-          {{ m.name }} ({{ m.quantity }} {{ m.unit }})
-        </label>
-
-        <input 
-          type="number" 
-          name="quantity_{{ m.id }}" 
-          value="{{ assigned_qty|default:'' }}" 
-          min="1" 
-          class="form-control-sm material-qty" 
-          style="width:70px;" 
-          {% if not assigned_qty %}disabled{% endif %}>
-      </div>
-      {% endwith %}
-    {% empty %}
-      <p>No materials available.</p>
-    {% endfor %}
+  <!-- ===== MATERIALS ASSIGNMENT ===== -->
+  <div class="card shadow-sm border-0 rounded-4 mb-4">
+    <!-- Header -->
+    <div class="card-header text-white fw-bold" style="background-color: #002e72;">
+      <i class="bi bi-box-seam me-2"></i> Select Materials
+    </div>
+  
+    <!-- Body -->
+    <div class="card-body" style="max-height: 350px; overflow-y: auto;">
+      {% if materials %}
+        <div class="table-responsive">
+          <table class="table align-middle table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 5%;"></th>
+                <th>Material</th>
+                <th style="width: 25%;">Available</th>
+                <th style="width: 20%;">Quantity to Use</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in materials %}
+                {% with assigned_qty=assigned_materials|get_item:m.id %}
+                <tr>
+                  <td class="text-center">
+                    <input 
+                      type="checkbox" 
+                      name="material_ids" 
+                      value="{{ m.id }}" 
+                      id="material_{{ m.id }}" 
+                      class="form-check-input material-checkbox"
+                      {% if assigned_qty %}checked{% endif %}>
+                  </td>
+                  <td>
+                    <label for="material_{{ m.id }}" class="mb-0 fw-semibold">
+                      {{ m.name }}
+                    </label>
+                  </td>
+                  <td class="text-muted small">
+                    {{ m.quantity }} {{ m.unit }}
+                  </td>
+                  <td>
+                    <input 
+                      type="number" 
+                      name="quantity_{{ m.id }}" 
+                      value="{{ assigned_qty|default:'' }}" 
+                      min="1" 
+                      class="form-control form-control-sm text-center material-qty"
+                      style="max-width: 90px;"
+                      {% if not assigned_qty %}disabled{% endif %}>
+                  </td>
+                </tr>
+                {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No materials available.</p>
+      {% endif %}
+    </div>
   </div>
+  
 
-  <script>
-    // Enable quantity input only when material checkbox is checked
-    document.querySelectorAll('.material-checkbox').forEach((checkbox) => {
-      const qtyInput = checkbox.parentElement.querySelector('.material-qty');
-      checkbox.addEventListener('change', () => {
-        qtyInput.disabled = !checkbox.checked;
-        if (!checkbox.checked) qtyInput.value = ""; // clear when unchecked
-      });
-    });
-  </script>
-
-
-  <button type="submit" name="action" value="assign" class="btn btn-success">Save Assignments</button>
+  <div class="text-end">
+    <button type="submit" name="action" value="assign" class="btn btn-success px-4">
+      <i class="bi bi-save me-1"></i> Save Assignments
+    </button>
+  </div>
 </form>
 {% endif %}
 
 {% if req.status == "Done for Review" %}
-<form method="post">
+<form method="post" class="text-end">
   {% csrf_token %}
-  <button type="submit" name="action" value="approve" class="btn btn-success">Approve Completion</button>
-  <button type="submit" name="action" value="reject" class="btn btn-danger">Send Back</button>
+  <button type="submit" name="action" value="approve" class="btn btn-success me-2">
+    <i class="bi bi-check-circle"></i> Approve Completion
+  </button>
+  <button type="submit" name="action" value="reject" class="btn btn-danger">
+    <i class="bi bi-arrow-counterclockwise"></i> Send Back
+  </button>
 </form>
 {% endif %}
 
+<!-- ===== MATERIAL CHECK JS ===== -->
+<script>
+  document.querySelectorAll('.material-checkbox').forEach((checkbox) => {
+    const qtyInput = checkbox.parentElement.querySelector('.material-qty');
+    checkbox.addEventListener('change', () => {
+      qtyInput.disabled = !checkbox.checked;
+      if (!checkbox.checked) qtyInput.value = "";
+    });
+  });
+</script>
 {% endblock %}

@@ -10,4 +10,6 @@ urlpatterns = [
     path("ipmt/preview/", views.preview_ipmt, name="preview_ipmt"),
     path('war-description/<int:war_id>/', views.get_war_description, name='get_war_description'),
 
+    path('gso', views.gso_analytics, name='gso_analytics'),
+
 ]
